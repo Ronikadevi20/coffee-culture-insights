@@ -12,6 +12,10 @@ import QRAnalytics from "./pages/QRAnalytics";
 import BDLAnalytics from "./pages/BDLAnalytics";
 import StampsEconomy from "./pages/StampsEconomy";
 import AIInsights from "./pages/AIInsights";
+import EngagementFunnels from "./pages/EngagementFunnels";
+import PlatformHealth from "./pages/PlatformHealth";
+import DatabaseLogs from "./pages/DatabaseLogs";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +34,11 @@ const AppRoutes = () => (
     <Route path="/dashboard/qr" element={<ProtectedRoute><QRAnalytics /></ProtectedRoute>} />
     <Route path="/dashboard/bdl" element={<ProtectedRoute><BDLAnalytics /></ProtectedRoute>} />
     <Route path="/dashboard/stamps" element={<ProtectedRoute><StampsEconomy /></ProtectedRoute>} />
+    <Route path="/dashboard/funnels" element={<ProtectedRoute><EngagementFunnels /></ProtectedRoute>} />
     <Route path="/dashboard/ai" element={<ProtectedRoute><AIInsights /></ProtectedRoute>} />
+    <Route path="/dashboard/health" element={<ProtectedRoute><PlatformHealth /></ProtectedRoute>} />
+    <Route path="/dashboard/logs" element={<ProtectedRoute><DatabaseLogs /></ProtectedRoute>} />
+    <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
