@@ -1,46 +1,183 @@
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ChartCard } from '@/components/dashboard/ChartCard';
-import { User, Bell, Shield, Palette, Users, Key, Save } from 'lucide-react';
+import { User, Bell, Shield, Users, Key, Save, RefreshCw, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  useUserProfile, 
+  useUpdateProfile, 
+  useUserPreferences, 
+  useUpdatePreferences 
+} from '@/hooks/useUsers';
+import { useCafeAdmins } from '@/hooks/usePlatformAdmin';
 
-const teamMembers = [
-  { id: 1, name: 'Ahmed Khan', email: 'ahmed@coffeeculture.pk', role: 'Admin', avatar: 'AK' },
-  { id: 2, name: 'Sara Malik', email: 'sara@coffeeculture.pk', role: 'Analyst', avatar: 'SM' },
-  { id: 3, name: 'Bilal Ahmed', email: 'bilal@coffeeculture.pk', role: 'Viewer', avatar: 'BA' },
-  { id: 4, name: 'Fatima Noor', email: 'fatima@coffeeculture.pk', role: 'Admin', avatar: 'FN' },
-];
+// Skeleton component
+const SettingsSkeleton = () => (
+  <div className="space-y-6 max-w-xl animate-pulse">
+    <div className="flex items-center gap-4">
+      <div className="w-16 h-16 rounded-full bg-muted" />
+      <div className="w-24 h-8 bg-muted rounded" />
+    </div>
+    <div className="space-y-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="space-y-2">
+          <div className="w-24 h-4 bg-muted rounded" />
+          <div className="w-full h-10 bg-muted rounded" />
+        </div>
+      ))}
+    </div>
+    <div className="w-32 h-10 bg-muted rounded" />
+  </div>
+);
+
+const TeamMemberSkeleton = () => (
+  <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border animate-pulse">
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-full bg-muted" />
+      <div>
+        <div className="w-32 h-5 bg-muted rounded mb-1" />
+        <div className="w-40 h-4 bg-muted rounded" />
+      </div>
+    </div>
+    <div className="flex items-center gap-3">
+      <div className="w-16 h-6 bg-muted rounded-full" />
+      <div className="w-12 h-8 bg-muted rounded" />
+    </div>
+  </div>
+);
 
 export default function Settings() {
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: true,
-    weekly: false,
-    alerts: true,
+  
+  // Fetch user profile and preferences
+  const profile = useUserProfile();
+  const preferences = useUserPreferences();
+  const updateProfile = useUpdateProfile();
+  const updatePreferences = useUpdatePreferences();
+  const cafeAdmins = useCafeAdmins();
+
+  // Local form state
+  const [profileForm, setProfileForm] = useState({
+    username: '',
+    profileImageUrl: '',
+  });
+  
+  const [notificationState, setNotificationState] = useState({
+    emailNotifications: true,
+    pushNotifications: true,
+    smsNotifications: false,
   });
 
-  const handleSave = () => {
-    toast({
-      title: "Settings saved",
-      description: "Your preferences have been updated successfully.",
-    });
+  // Initialize form when data loads
+  useState(() => {
+    if (profile.data) {
+      setProfileForm({
+        username: profile.data.username || '',
+        profileImageUrl: profile.data.profileImageUrl || '',
+      });
+    }
+  });
+
+  useState(() => {
+    if (preferences.data) {
+      setNotificationState({
+        emailNotifications: preferences.data.emailNotifications,
+        pushNotifications: preferences.data.pushNotifications,
+        smsNotifications: preferences.data.smsNotifications,
+      });
+    }
+  });
+
+  const handleSaveProfile = async () => {
+    try {
+      await updateProfile.mutateAsync({
+        username: profileForm.username || undefined,
+        profileImageUrl: profileForm.profileImageUrl || undefined,
+      });
+      toast({
+        title: "Settings saved",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSavePreferences = async () => {
+    try {
+      await updatePreferences.mutateAsync(notificationState);
+      toast({
+        title: "Preferences saved",
+        description: "Your notification preferences have been updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update preferences. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const isLoading = profile.isLoading || preferences.isLoading;
+  const isError = profile.isError || preferences.isError;
+
+  // Get initials for avatar
+  const getInitials = (name?: string, email?: string) => {
+    if (name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    if (email) {
+      return email.slice(0, 2).toUpperCase();
+    }
+    return 'U';
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Settings</h1>
-          <p className="text-muted-foreground mt-1">Manage your dashboard preferences</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-display font-bold text-foreground">Settings</h1>
+            <p className="text-muted-foreground mt-1">Manage your dashboard preferences</p>
+          </div>
+          {isLoading && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span className="text-sm">Loading...</span>
+            </div>
+          )}
         </div>
+
+        {/* Error State */}
+        {isError && (
+          <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-destructive" />
+            <p className="text-destructive">Failed to load settings. Please refresh the page.</p>
+            <Button 
+              onClick={() => {
+                profile.refetch();
+                preferences.refetch();
+              }} 
+              variant="outline" 
+              size="sm" 
+              className="ml-auto"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="bg-muted/50">
@@ -65,94 +202,129 @@ export default function Settings() {
           {/* Profile Tab */}
           <TabsContent value="profile">
             <ChartCard title="Profile Settings" subtitle="Manage your account information">
-              <div className="space-y-6 max-w-xl">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-xl font-semibold text-primary">AD</span>
+              {profile.isLoading ? (
+                <SettingsSkeleton />
+              ) : (
+                <div className="space-y-6 max-w-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-xl font-semibold text-primary">
+                        {getInitials(profile.data?.username, profile.data?.email)}
+                      </span>
+                    </div>
+                    <div>
+                      <Button variant="outline" size="sm">Change Avatar</Button>
+                    </div>
                   </div>
-                  <div>
-                    <Button variant="outline" size="sm">Change Avatar</Button>
-                  </div>
-                </div>
 
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue="Admin User" />
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input 
+                        id="username" 
+                        value={profileForm.username || profile.data?.username || ''} 
+                        onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={profile.data?.email || ''} 
+                        disabled 
+                      />
+                      <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="role">Role</Label>
+                      <Input 
+                        id="role" 
+                        value={profile.data?.role || 'User'} 
+                        disabled 
+                      />
+                    </div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue="admin@coffeeculture.pk" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Input id="role" defaultValue="Administrator" disabled />
-                  </div>
-                </div>
 
-                <Button onClick={handleSave} className="gap-2">
-                  <Save className="w-4 h-4" />
-                  Save Changes
-                </Button>
-              </div>
+                  <Button 
+                    onClick={handleSaveProfile} 
+                    className="gap-2"
+                    disabled={updateProfile.isPending}
+                  >
+                    {updateProfile.isPending ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    Save Changes
+                  </Button>
+                </div>
+              )}
             </ChartCard>
           </TabsContent>
 
           {/* Notifications Tab */}
           <TabsContent value="notifications">
             <ChartCard title="Notification Preferences" subtitle="Control how you receive updates">
-              <div className="space-y-6 max-w-xl">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Receive updates via email</p>
+              {preferences.isLoading ? (
+                <SettingsSkeleton />
+              ) : (
+                <div className="space-y-6 max-w-xl">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-base">Email Notifications</Label>
+                        <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                      </div>
+                      <Switch
+                        checked={notificationState.emailNotifications}
+                        onCheckedChange={(checked) => 
+                          setNotificationState(prev => ({ ...prev, emailNotifications: checked }))
+                        }
+                      />
                     </div>
-                    <Switch
-                      checked={notifications.email}
-                      onCheckedChange={(checked) => setNotifications({ ...notifications, email: checked })}
-                    />
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-base">Push Notifications</Label>
+                        <p className="text-sm text-muted-foreground">Browser push notifications</p>
+                      </div>
+                      <Switch
+                        checked={notificationState.pushNotifications}
+                        onCheckedChange={(checked) => 
+                          setNotificationState(prev => ({ ...prev, pushNotifications: checked }))
+                        }
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-base">SMS Notifications</Label>
+                        <p className="text-sm text-muted-foreground">Text message alerts</p>
+                      </div>
+                      <Switch
+                        checked={notificationState.smsNotifications}
+                        onCheckedChange={(checked) => 
+                          setNotificationState(prev => ({ ...prev, smsNotifications: checked }))
+                        }
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Push Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Browser push notifications</p>
-                    </div>
-                    <Switch
-                      checked={notifications.push}
-                      onCheckedChange={(checked) => setNotifications({ ...notifications, push: checked })}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Weekly Digest</Label>
-                      <p className="text-sm text-muted-foreground">Weekly summary emails</p>
-                    </div>
-                    <Switch
-                      checked={notifications.weekly}
-                      onCheckedChange={(checked) => setNotifications({ ...notifications, weekly: checked })}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base">Critical Alerts</Label>
-                      <p className="text-sm text-muted-foreground">Immediate alerts for issues</p>
-                    </div>
-                    <Switch
-                      checked={notifications.alerts}
-                      onCheckedChange={(checked) => setNotifications({ ...notifications, alerts: checked })}
-                    />
-                  </div>
+                  <Button 
+                    onClick={handleSavePreferences} 
+                    className="gap-2"
+                    disabled={updatePreferences.isPending}
+                  >
+                    {updatePreferences.isPending ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    Save Preferences
+                  </Button>
                 </div>
-
-                <Button onClick={handleSave} className="gap-2">
-                  <Save className="w-4 h-4" />
-                  Save Preferences
-                </Button>
-              </div>
+              )}
             </ChartCard>
           </TabsContent>
 
@@ -167,37 +339,49 @@ export default function Settings() {
                   </Button>
                 </div>
 
-                <div className="space-y-3">
-                  {teamMembers.map((member, index) => (
-                    <motion.div
-                      key={member.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-sm font-medium text-primary">{member.avatar}</span>
+                {cafeAdmins.isLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <TeamMemberSkeleton key={i} />
+                    ))}
+                  </div>
+                ) : cafeAdmins.data?.data && cafeAdmins.data.data.length > 0 ? (
+                  <div className="space-y-3">
+                    {cafeAdmins.data.data.map((admin, index) => (
+                      <motion.div
+                        key={admin.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-sm font-medium text-primary">
+                              {getInitials(admin.user.username, admin.user.email)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{admin.user.username}</p>
+                            <p className="text-sm text-muted-foreground">{admin.user.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-foreground">{member.name}</p>
-                          <p className="text-sm text-muted-foreground">{member.email}</p>
+                        <div className="flex items-center gap-3">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                            Cafe Admin
+                          </span>
+                          <Button variant="ghost" size="sm">Edit</Button>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                          member.role === 'Admin' 
-                            ? 'bg-primary/10 text-primary' 
-                            : 'bg-muted text-muted-foreground'
-                        }`}>
-                          {member.role}
-                        </span>
-                        <Button variant="ghost" size="sm">Edit</Button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground">No team members found</p>
+                    <p className="text-sm text-muted-foreground">Invite team members to manage your cafes</p>
+                  </div>
+                )}
               </div>
             </ChartCard>
           </TabsContent>
@@ -237,17 +421,10 @@ export default function Settings() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between py-2">
                       <div>
-                        <p className="text-sm font-medium text-foreground">Chrome on MacOS</p>
-                        <p className="text-xs text-muted-foreground">Karachi, Pakistan • Current session</p>
+                        <p className="text-sm font-medium text-foreground">Current Browser</p>
+                        <p className="text-xs text-muted-foreground">Current session</p>
                       </div>
                       <span className="text-xs text-green-600">Active</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Safari on iPhone</p>
-                        <p className="text-xs text-muted-foreground">Karachi, Pakistan • 2 hours ago</p>
-                      </div>
-                      <Button variant="ghost" size="sm" className="text-destructive">Revoke</Button>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Coffee, Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Coffee, Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -9,16 +9,49 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [rememberMe, setRememberMe] = useState(false);
+  const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Clear error when inputs change
+  useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [email, password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+
+    // Basic validation
+    if (!email.trim()) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter your email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!password) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please enter your password.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       const success = await login(email, password);
+      
       if (success) {
         toast({
           title: 'Welcome back!',
@@ -26,20 +59,19 @@ const Login = () => {
         });
         navigate('/dashboard');
       } else {
+        // Error is already set in the auth context
         toast({
           title: 'Authentication failed',
-          description: 'Please check your credentials and try again.',
+          description: error || 'Please check your credentials and try again.',
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch (err) {
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred.',
+        description: 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -74,6 +106,21 @@ const Login = () => {
             </p>
           </div>
 
+          {/* Error Alert */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex items-start gap-3"
+            >
+              <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-destructive">Authentication Error</p>
+                <p className="text-sm text-destructive/80">{error}</p>
+              </div>
+            </motion.div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
@@ -87,6 +134,8 @@ const Login = () => {
                   className="input-modern w-full pl-12"
                   placeholder="you@coffeeculture.pk"
                   required
+                  disabled={isLoading}
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -102,11 +151,14 @@ const Login = () => {
                   className="input-modern w-full pl-12 pr-12"
                   placeholder="••••••••"
                   required
+                  disabled={isLoading}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -115,7 +167,13 @@ const Login = () => {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="rounded border-border text-primary focus:ring-primary" />
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-border text-primary focus:ring-primary"
+                  disabled={isLoading}
+                />
                 <span className="text-sm text-muted-foreground">Remember me</span>
               </label>
               <a href="#" className="text-sm text-primary hover:underline">
@@ -126,7 +184,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
+              className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
@@ -139,9 +197,13 @@ const Login = () => {
             </button>
           </form>
 
-          <p className="mt-8 text-center text-sm text-muted-foreground">
-            Internal access only. Contact admin for access.
-          </p>
+          <div className="mt-8 p-4 bg-muted/50 rounded-lg">
+            <p className="text-center text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">Platform Admin Access Only</span>
+              <br />
+              Contact your administrator for access credentials.
+            </p>
+          </div>
         </motion.div>
       </div>
 

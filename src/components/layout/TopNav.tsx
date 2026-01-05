@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Sun, Moon, Calendar, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +16,59 @@ import {
 export const TopNav = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [dateRange, setDateRange] = useState('Last 7 days');
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle('dark');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: 'Signed out',
+        description: 'You have been successfully signed out.',
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (user?.username) {
+      return user.username.charAt(0).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Get display name
+  const getDisplayName = () => {
+    return user?.username || user?.email?.split('@')[0] || 'User';
+  };
+
+  // Get role display text
+  const getRoleDisplay = () => {
+    switch (user?.role) {
+      case 'PLATFORM_ADMIN':
+        return 'Platform Admin';
+      case 'CAFE_ADMIN':
+        return 'Café Admin';
+      case 'USER':
+        return 'User';
+      default:
+        return user?.role || 'Admin';
+    }
   };
 
   return (
@@ -78,22 +127,39 @@ export const TopNav = () => {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-3 pl-3 pr-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-foreground">{user?.name}</p>
-                  <p className="text-xs text-muted-foreground">{user?.role}</p>
+                  <p className="text-sm font-medium text-foreground">{getDisplayName()}</p>
+                  <p className="text-xs text-muted-foreground">{getRoleDisplay()}</p>
                 </div>
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-medium">
-                  {user?.name?.charAt(0)}
-                </div>
+                {user?.profileImageUrl ? (
+                  <img
+                    src={user.profileImageUrl}
+                    alt={getDisplayName()}
+                    className="w-9 h-9 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-medium">
+                    {getUserInitials()}
+                  </div>
+                )}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-popover">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <span>{getDisplayName()}</span>
+                  <span className="text-xs font-normal text-muted-foreground">{user?.email}</span>
+                </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
+                Profile Settings
+              </DropdownMenuItem>
               <DropdownMenuItem>Team Members</DropdownMenuItem>
               <DropdownMenuItem>API Keys</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Sign Out</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
+                Sign Out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

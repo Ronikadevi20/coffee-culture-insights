@@ -1,6 +1,18 @@
+import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
+interface ChartDataPoint {
+  date: string;
+  users: number;
+  newUsers?: number;
+}
+
+interface DailyActiveUsersChartProps {
+  data?: ChartDataPoint[];
+}
+
+// Default mock data
+const defaultData = [
   { date: 'Mon', users: 2400 },
   { date: 'Tue', users: 2210 },
   { date: 'Wed', users: 2890 },
@@ -10,10 +22,24 @@ const data = [
   { date: 'Sun', users: 4800 },
 ];
 
-export const DailyActiveUsersChart = () => {
+export const DailyActiveUsersChart = ({ data }: DailyActiveUsersChartProps) => {
+  const chartData = useMemo(() => {
+    if (!data || data.length === 0) {
+      return defaultData;
+    }
+    
+    // Format dates if they're in ISO format
+    return data.map(item => ({
+      ...item,
+      date: item.date.includes('-') 
+        ? new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' })
+        : item.date,
+    }));
+  }, [data]);
+
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="hsl(28, 60%, 55%)" stopOpacity={0.3} />
@@ -41,6 +67,10 @@ export const DailyActiveUsersChart = () => {
             boxShadow: '0 4px 6px -1px hsl(17 27% 18% / 0.1)',
           }}
           labelStyle={{ color: 'hsl(19, 38%, 12%)', fontWeight: 600 }}
+          formatter={(value: number, name: string) => [
+            value.toLocaleString(),
+            name === 'users' ? 'Active Users' : name === 'newUsers' ? 'New Users' : name
+          ]}
         />
         <Area
           type="monotone"

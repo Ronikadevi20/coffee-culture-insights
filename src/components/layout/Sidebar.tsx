@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -19,6 +19,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -37,8 +38,32 @@ const navItems = [
 
 export const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const location = useLocation();
-  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      toast({
+        title: 'Signed out',
+        description: 'You have been successfully signed out.',
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <motion.aside
@@ -99,13 +124,41 @@ export const Sidebar = () => {
         })}
       </nav>
 
-      {/* Logout */}
-      <div className="p-3 border-t border-sidebar-border">
+      {/* User Info & Logout */}
+      <div className="p-3 border-t border-sidebar-border space-y-2">
+        {/* User Info - Only show when not collapsed */}
+        <AnimatePresence>
+          {!collapsed && user && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="px-3 py-2 rounded-lg bg-sidebar-accent/50"
+            >
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {user.username || user.email?.split('@')[0]}
+              </p>
+              <p className="text-xs text-sidebar-foreground/60 truncate">
+                {user.email}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Logout Button */}
         <button
-          onClick={logout}
-          className="nav-item w-full text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className={cn(
+            'nav-item w-full text-sidebar-foreground/60 hover:text-sidebar-foreground',
+            isLoggingOut && 'opacity-50 cursor-not-allowed'
+          )}
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
+          {isLoggingOut ? (
+            <div className="w-5 h-5 border-2 border-sidebar-foreground/30 border-t-sidebar-foreground rounded-full animate-spin flex-shrink-0" />
+          ) : (
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+          )}
           <AnimatePresence>
             {!collapsed && (
               <motion.span
@@ -114,7 +167,7 @@ export const Sidebar = () => {
                 exit={{ opacity: 0 }}
                 className="text-sm font-medium"
               >
-                Sign Out
+                {isLoggingOut ? 'Signing out...' : 'Sign Out'}
               </motion.span>
             )}
           </AnimatePresence>
