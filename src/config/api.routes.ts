@@ -5,6 +5,7 @@
 
 // Base API URL
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+export const API_IMAGE_URL = import.meta.env.VITE_API_IMAGE_URL || 'http://localhost:5000';
 
 /**
  * Authentication Routes
@@ -132,15 +133,18 @@ export const PLATFORM_ADMIN_ROUTES = {
   HEALTH: '/platform-admin/health',
   HEALTH_DETAILED: '/platform-admin/health/detailed',
   ACTIVITY: '/platform-admin/activity',
-  
+
   // User management
   USERS: '/platform-admin/users',
   USER_ROLE: (userId: string) => `/platform-admin/users/${userId}/role`,
   USER_DEACTIVATE: (userId: string) => `/platform-admin/users/${userId}/deactivate`,
   USER_ACTIVATE: (userId: string) => `/platform-admin/users/${userId}/activate`,
-  
+
   // Cafe admin management
   CAFE_ADMINS: '/platform-admin/cafe-admins',
+  CAFE_ADMINS_PENDING: '/platform-admin/cafe-admins/pending',
+  CAFE_ADMIN_APPROVE: (userId: string) => `/platform-admin/cafe-admins/${userId}/approve`,
+  CAFE_ADMIN_REJECT: (userId: string) => `/platform-admin/cafe-admins/${userId}/reject`,
   REMOVE_CAFE_ADMIN: (userId: string, cafeId: string) => `/platform-admin/cafe-admins/${userId}/${cafeId}`,
 } as const;
 
@@ -235,4 +239,21 @@ export default {
   AI_INSIGHTS: AI_INSIGHTS_ROUTES,
   DATABASE: DATABASE_ROUTES,
   USERS: USERS_ROUTES,
+};
+
+export const getUploadUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
+  
+  // If it's already a full URL (http/https) or a data URL (base64), return as is
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
+  
+  // If it starts with /uploads, prepend the base URL
+  if (path.startsWith('/uploads')) {
+    return `${API_IMAGE_URL}${path}`;
+  }
+  
+  // If it's just a filename or relative path, assume it's in uploads
+  return `${API_IMAGE_URL}/uploads/${path}`;
 };

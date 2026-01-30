@@ -17,6 +17,7 @@ import EngagementFunnels from "./pages/EngagementFunnels";
 import PlatformHealth from "./pages/PlatformHealth";
 import DatabaseLogs from "./pages/DatabaseLogs";
 import Settings from "./pages/Settings";
+import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -188,6 +189,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute>
           <Settings />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/dashboard/user-management"
+      element={
+        <ProtectedRoute>
+          <UserManagement />
         </ProtectedRoute>
       }
     />

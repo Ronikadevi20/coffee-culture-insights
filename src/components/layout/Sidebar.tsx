@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Coffee,
   LogOut,
+  UserCog,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -33,6 +34,7 @@ const navItems = [
   { icon: Brain, label: 'AI Predictions', path: '/dashboard/ai' },
   { icon: Activity, label: 'Platform Health', path: '/dashboard/health' },
   { icon: Database, label: 'Database Logs', path: '/dashboard/logs' },
+  { icon: UserCog, label: 'User Management', path: '/dashboard/user-management' },
   { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
 ];
 
