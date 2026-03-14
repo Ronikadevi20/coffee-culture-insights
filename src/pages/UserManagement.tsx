@@ -344,7 +344,7 @@ const UserManagement = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          {admin.cafe.imageUrl ? (
+                          {admin.cafe?.imageUrl ? (
                             <img
                               src={getUploadUrl(admin.cafe.imageUrl)}
                               alt={admin.username}
