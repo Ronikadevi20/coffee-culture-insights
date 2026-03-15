@@ -136,6 +136,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
 
+      // Enforce role: only PLATFORM_ADMIN accounts may access this portal
+      if (result.user.role !== UserRole.PLATFORM_ADMIN) {
+        await authService.logout();
+        setError('Access denied. This portal is for platform administrators only.');
+        setLoading(false);
+        return false;
+      }
+
       setUser(result.user);
       return true;
     } catch (error) {
