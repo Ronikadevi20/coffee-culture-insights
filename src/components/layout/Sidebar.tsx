@@ -18,6 +18,7 @@ import {
   Coffee,
   LogOut,
   UserCog,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -35,6 +36,7 @@ const navItems = [
   { icon: Activity, label: 'Platform Health', path: '/dashboard/health' },
   { icon: Database, label: 'Database Logs', path: '/dashboard/logs' },
   { icon: UserCog, label: 'User Management', path: '/dashboard/user-management' },
+  { icon: MessageSquare, label: 'Support', path: '/dashboard/support' },
   { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
 ];
 

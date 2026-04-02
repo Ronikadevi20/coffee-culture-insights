@@ -4,8 +4,8 @@
  */
 
 // Base API URL
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-export const API_IMAGE_URL = import.meta.env.VITE_API_IMAGE_URL || 'http://localhost:5000';
+export const API_BASE_URL = import.meta.env.VITE_API_URL;
+export const API_IMAGE_URL = import.meta.env.VITE_API_IMAGE_URL;
 
 /**
  * Authentication Routes
@@ -146,6 +146,21 @@ export const PLATFORM_ADMIN_ROUTES = {
   CAFE_ADMIN_APPROVE: (userId: string) => `/platform-admin/cafe-admins/${userId}/approve`,
   CAFE_ADMIN_REJECT: (userId: string) => `/platform-admin/cafe-admins/${userId}/reject`,
   REMOVE_CAFE_ADMIN: (userId: string, cafeId: string) => `/platform-admin/cafe-admins/${userId}/${cafeId}`,
+
+  // Bulk email
+  SEND_BULK_EMAIL: '/platform-admin/send-bulk-email',
+} as const;
+
+/**
+ * Support Routes (admin)
+ */
+export const SUPPORT_ROUTES = {
+  TICKETS: '/support/tickets',
+  TICKET_BY_ID: (id: string) => `/support/tickets/${id}`,
+  TICKET_UPDATE: (id: string) => `/support/tickets/${id}`,
+  TICKET_REPLY: (id: string) => `/support/tickets/${id}/reply`,
+  TICKET_CLOSE: (id: string) => `/support/tickets/${id}/close`,
+  TICKET_STATS: '/support/tickets/stats',
 } as const;
 
 /**
@@ -239,6 +254,7 @@ export default {
   AI_INSIGHTS: AI_INSIGHTS_ROUTES,
   DATABASE: DATABASE_ROUTES,
   USERS: USERS_ROUTES,
+  SUPPORT: SUPPORT_ROUTES,
 };
 
 export const getUploadUrl = (path: string | null | undefined): string | null => {

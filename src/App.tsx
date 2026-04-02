@@ -18,6 +18,7 @@ import PlatformHealth from "./pages/PlatformHealth";
 import DatabaseLogs from "./pages/DatabaseLogs";
 import Settings from "./pages/Settings";
 import UserManagement from "./pages/UserManagement";
+import SupportManagement from "./pages/SupportManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -197,6 +198,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute>
           <UserManagement />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/dashboard/support"
+      element={
+        <ProtectedRoute>
+          <SupportManagement />
         </ProtectedRoute>
       }
     />
