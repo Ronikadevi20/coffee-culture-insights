@@ -54,7 +54,7 @@ class AuthService {
       }
     } catch (error) {
       // Even if logout fails on server, we should clear local state
-      console.error('Logout error:', getErrorMessage(error));
+      // console.error('Logout error:', getErrorMessage(error));
     } finally {
       // Always clear tokens from localStorage
       tokenManager.clearTokens();

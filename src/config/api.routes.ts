@@ -136,6 +136,7 @@ export const PLATFORM_ADMIN_ROUTES = {
 
   // User management
   USERS: '/platform-admin/users',
+  USER_BY_ID: (userId: string) => `/platform-admin/users/${userId}`,
   USER_ROLE: (userId: string) => `/platform-admin/users/${userId}/role`,
   USER_DEACTIVATE: (userId: string) => `/platform-admin/users/${userId}/deactivate`,
   USER_ACTIVATE: (userId: string) => `/platform-admin/users/${userId}/activate`,
@@ -143,6 +144,7 @@ export const PLATFORM_ADMIN_ROUTES = {
   // Cafe admin management
   CAFE_ADMINS: '/platform-admin/cafe-admins',
   CAFE_ADMINS_PENDING: '/platform-admin/cafe-admins/pending',
+  CAFE_ADMIN_REMIND: (userId: string) => `/platform-admin/cafe-admins/${userId}/remind`,
   CAFE_ADMIN_APPROVE: (userId: string) => `/platform-admin/cafe-admins/${userId}/approve`,
   CAFE_ADMIN_REJECT: (userId: string) => `/platform-admin/cafe-admins/${userId}/reject`,
   REMOVE_CAFE_ADMIN: (userId: string, cafeId: string) => `/platform-admin/cafe-admins/${userId}/${cafeId}`,
